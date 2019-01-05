@@ -1,11 +1,16 @@
 const express = require("express")
 const app = express()
 const bodyParser = require("body-parser")
-const { listenport, post_key_limit } = require(`${__dirname}/../config`)
+const { listenport, post_key_limit, headers } = require(`${__dirname}/../config`)
 const convert = require("./converter")
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
+
+app.use((req, res, next) => {
+  Object.keys(headers).forEach(key => res.append(key, headers[key]))
+  next()
+})
 
 //be guid to steamid
 app.get("/:guid([a-f0-9]{32})", async (req, res) => {

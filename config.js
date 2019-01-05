@@ -2,6 +2,11 @@ module.exports = {
   //Webserver Listenport
   listenport: 6051,
 
+  //set additional headers for the http response
+  headers: {
+     "Access-Control-Allow-Origin": "*"
+  },
+
   //Data directory for caching
   datadir: `${__dirname}/data`,
 
