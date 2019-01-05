@@ -22,9 +22,9 @@ module.exports = {
     conn: {
       host:       "localhost",  //mysql hostname
       port:       3306,         //mysql database port
-      user:       "multi",           //mysql username
-      password:   "xO4A5O",           //mysql password
-      database:   "converter",           //mysql database name
+      user:       "",           //mysql username
+      password:   "",           //mysql password
+      database:   "",           //mysql database name
       connectionLimit: 5        //mysql connection pool
     },
     //mysql table name
