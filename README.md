@@ -59,3 +59,14 @@ There are 3 endpoints to request ids:
 * it will send http status `400` if the included array given in the body has more keys than set in the `config.js`
 * it will send http status `400` if one of the keys are invalid formatted (only pattern `/^([a-f0-9]{32}|\d{17})$` allowed)
 * the response data will hold the requested steamid / beguid as key and the retrieved value as value, if the beguid was not successfully converted it will have `null` as value
+
+__Docker:__
+
+You can also build this app as a docker image:
+`docker build -t multivit4min/beguid-converter .`
+And the run it using this command:
+`docker run -p 49160:6051 -d multivit4min/beguid-converter`
+This will expose the webserver in port 49160, you can adapt this to the port of your choice.
+
+This is just a very basic Docker image installing dependencies and launching the web server. Networking/database setup is still required.
+You can open the console.js by opening the container's bash by using `docker exec -it 0a17ffd4db41 /bin/bash` (replace the container ID with yours) and then running `node console.js`.
