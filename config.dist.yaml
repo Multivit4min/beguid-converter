@@ -1,0 +1,46 @@
+webserver:
+  #webserver listenport
+  port: 6051
+  #headers to add to the api
+  headers:
+    Access-Control-Allow-Origin: "*"
+  #maximum keys to request at once
+  postKeyLimit: 250
+data:
+  #folder to save data to
+  dir: ./data
+  cache:
+    #time to keep data in cache in ms (14 days)
+    keepTime: 1008000000
+    #time till cache gets saved to cache (1 hour)
+    saveInterval: 3600000
+mysql:
+  #for all connection options please see https://github.com/mysqljs/mysql#connection-options
+  connection:
+    #mysql database hostname
+    host: "localhost"
+    #mysql database port
+    port: 3306
+    #mysql database username
+    user: ""
+    #mysql database password
+    password: ""
+    #mysql maximum connection for the pool
+    connectionLimit: 5
+  #database table prefix to use
+  table: "beguid_"
+converter:
+  #how many inserts should be done at once when generating ids
+  #leave it as a string
+  insertBatchSize: "50000"
+  #this defines how much chars of the guid will get saved
+  #should be a multiple of 2
+  #defines how much characters of the guid should be saved in the database
+  #it is recommended to use either 6 or 8
+  #TODO: BELOW DATA MIGHT BE INCORRECT
+  #length of 6: needs 17.6GB Disk Space per billion ids -> uses more CPU per request (but barely noticeable)
+  #length of 8: needs 19.6GB Disk Space per billion ids -> requires less CPU per request
+  length: 6
+  #initial steamid should not be changed
+  #leave it as a string
+  offset: "76561197960265730"
