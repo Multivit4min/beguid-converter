@@ -3,15 +3,21 @@ import path from "path"
 import yaml from "js-yaml"
 import { ConnectionOptions } from "promise-mysql"
 
+const internals = (config: Omit<Configuration, "internals">) => ({
+  dataDir: path.join(__dirname, "../..", config.data.dir),
+  cacheFile: path.join(config.data.dir, "cache.json"),
+  pidFile: path.join(config.data.dir, "pid"),
+})
 export let config: Configuration
-export const basePath = path.join(__dirname, "../..")
 
 export async function initialize() {
-  const data = await fs.readFile(path.join(basePath, "config.yaml"), "utf-8")
-  config = yaml.safeLoad(data)
+  const data = await fs.readFile(path.join(__dirname, "../..", "config.yaml"), "utf-8")
+  const yamlConfig = yaml.safeLoad(data)
+  config = { ...yamlConfig, internals: internals(yamlConfig) }
 }
 
 export interface Configuration {
+  internals: ReturnType<typeof internals>
   webserver: {
     port: number
     headers: Record<string, string>

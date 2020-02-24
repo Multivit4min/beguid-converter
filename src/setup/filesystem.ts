@@ -1,28 +1,20 @@
 import { promises as fs } from "fs"
-import path from "path"
-import { basePath, config } from "./config"
-
-let dataDir: string = ""
-
-function getPath(file: string) {
-  return path.join(dataDir, file)
-}
+import { config } from "./config"
 
 export async function initialize() {
-  dataDir = path.join(basePath, config.data.dir)
   try {
-    await fs.mkdir(dataDir)
+    await fs.mkdir(config.internals.dataDir)
   } catch (e) {
     if (e.code !== "EEXIST") throw e
   }
   try {
-    await fs.stat(getPath("cache.json"))
+    await fs.stat(config.internals.cacheFile)
   } catch (e) {
     if (e.code === "ENOENT") {
-      await fs.writeFile(getPath("cache.json"), JSON.stringify([]))
+      await fs.writeFile(config.internals.cacheFile, JSON.stringify([]))
     } else {
       throw e
     }
   }
-  await fs.writeFile(getPath("pid"), process.pid)
+  await fs.writeFile(config.internals.pidFile, process.pid)
 }

@@ -37,10 +37,10 @@ function validateTables() {
 
 //validates a single tables and checks if they have been correctly created
 async function validateTable(suffix: ValidSuffix) {
-  const res = (await pool.query(`SHOW table status WHERE Name = ?`, getTableName(suffix)))[0]
+  const res = await getTableStatus(suffix)
   if (!res) throw new Error(`did not receive table status for table ${getTableName(suffix)}`)
   if (res.Engine.toLowerCase() !== "myisam") throw new Error(`DB Engine is not set to MyISAM! Engine is ${res.Engine}`)
-  const desc = await pool.query(`DESCRIBE ${getTableName(suffix)}`)
+  const desc = await getTableDescription(suffix)
   desc.forEach((row: Record<string, any>) => {
     switch (row.Field) {
       case "steamid":
@@ -53,6 +53,14 @@ async function validateTable(suffix: ValidSuffix) {
         throw new Error(`Unexpected Field ${row.Field} found in Table!`)
     }
   })
+}
+
+export async function getTableStatus(suffix: ValidSuffix) {
+  return (await pool.query(`SHOW table status WHERE Name = ?`, getTableName(suffix)))[0]
+}
+
+export function getTableDescription(suffix: ValidSuffix) {
+  return pool.query(`DESCRIBE ${getTableName(suffix)}`)
 }
 
 //returns a single table name with its suffix

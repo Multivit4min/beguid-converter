@@ -1,6 +1,16 @@
 import { createHash } from "crypto"
+import { Pool } from "promise-mysql"
+import { Cache } from "../lib/Cache"
 
 export class BEGuid {
+
+  private pool: Pool
+  private cache: Cache
+
+  constructor(init: BEGuid.Init) {
+    this.pool = init.pool
+    this.cache = init.cache
+  }
 
   /**
    * generates the battleye uid from a steamid
@@ -14,4 +24,11 @@ export class BEGuid {
     return createHash("md5").update(new Uint8Array(hex)).digest("hex")
   }
 
+}
+
+export namespace BEGuid {
+  export interface Init {
+    pool: Pool,
+    cache: Cache
+  }
 }
