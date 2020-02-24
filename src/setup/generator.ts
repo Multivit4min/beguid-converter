@@ -8,4 +8,6 @@ export let generator: Generator
 export async function initialize() {
   generator = new Generator({ beguid, config, pool })
   await generator.initialize()
+  generator.generateAmount(1000n)
+  generator.start()
 }

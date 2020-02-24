@@ -21,6 +21,8 @@ mysql:
     host: "localhost"
     #mysql database port
     port: 3306
+    #mysql database
+    database: "beguid"
     #mysql database username
     user: ""
     #mysql database password
@@ -38,9 +40,9 @@ converter:
   #defines how much characters of the guid should be saved in the database
   #it is recommended to use either 6 or 8
   #TODO: BELOW DATA MIGHT BE INCORRECT
-  #length of 6: needs 17.6GB Disk Space per billion ids -> uses more CPU per request (but barely noticeable)
-  #length of 8: needs 19.6GB Disk Space per billion ids -> requires less CPU per request
-  length: 6
+  #byteLength of 6: needs 17.6GB Disk Space per billion ids -> uses more CPU per request (but barely noticeable)
+  #byteLength of 8: needs 19.6GB Disk Space per billion ids -> requires less CPU per request
+  byteLength: 6
   #initial steamid should not be changed
   #leave it as a string
   offset: "76561197960265730"
