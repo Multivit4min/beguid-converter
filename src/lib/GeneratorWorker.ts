@@ -4,19 +4,19 @@ import { ValidSuffix, getTableName } from "../setup/mysql"
 import { Configuration } from "../setup/config"
 
 export class GeneratorWorker {
+  private config: Configuration
   private pool: Pool
   private offset: bigint
-  private guidlen: number
   private lastInserted: bigint
   private generateUntil: bigint
   private batchSize: number
   private batch: Record<ValidSuffix, Batch>
 
   constructor(init: GeneratorWorker.Init) {
+    this.config = init.config
     this.pool = init.pool
-    this.offset = BigInt(init.config.converter.offset)
-    this.guidlen = init.config.converter.byteLength
-    this.batchSize = Number(init.config.converter.insertBatchSize)
+    this.offset = BigInt(this.config.converter.offset)
+    this.batchSize = Number(this.config.converter.insertBatchSize)
     this.lastInserted = init.lastInserted
     this.generateUntil = init.generateUntil
     this.batch = this.initializeEmptyBatch()
@@ -31,7 +31,7 @@ export class GeneratorWorker {
         pool: this.pool,
         batchSize: this.batchSize,
         suffix: <ValidSuffix>i.toString(16),
-        guidlen: this.guidlen
+        guidlen: this.config.internals.hexChars
       })
     ]))
   }
@@ -40,6 +40,7 @@ export class GeneratorWorker {
   async run() {
     while (true) {
       const suffix = this.generateBatch()
+      console.log({ suffix })
       if (typeof suffix === "boolean") {
         return Promise.all(Object.values(this.batch).map(b => b.dispatch()))
       } else {

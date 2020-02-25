@@ -7,6 +7,8 @@ const internals = (config: Omit<Configuration, "internals">) => ({
   dataDir: path.join(__dirname, "../..", config.data.dir),
   cacheFile: path.join(config.data.dir, "cache.json"),
   pidFile: path.join(config.data.dir, "pid"),
+  hexChars: config.converter.byteLength * 2,
+  steamIdOffset: BigInt(config.converter.offset)
 })
 export let config: Configuration
 

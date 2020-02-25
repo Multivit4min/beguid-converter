@@ -13,5 +13,6 @@ const { lastInserted, generateUntil }: Generator.WorkerData = workerData
   const generatorWorker = new GeneratorWorker({
     pool, lastInserted, generateUntil, config
   })
-  generatorWorker.run()
+  await generatorWorker.run()
+  process.exit(0)
 })()

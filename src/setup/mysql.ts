@@ -9,7 +9,7 @@ let binaryLen: number
 export async function initialize() {
   if (!/^[a-z0-9\-_]+$/i.test(config.mysql.table))
     throw new Error("MYSQL table name should only contain chars from 'a-z', '0-9', '_' and '-'!")
-  binaryLen = Math.ceil(config.converter.byteLength / 2)
+  binaryLen = config.converter.byteLength
   pool = createPool(config.mysql.connection)
   await createTables()
   await validateTables()

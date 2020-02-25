@@ -2,9 +2,7 @@
   "name": "guidconverter",
   "version": "2.0.0",
   "description": "Converts BE GUID to a Steam ID",
-  "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "tsc && node lib/index.js"
   },
   "author": "Multivitamin <david.kartnaller@gmail.com>",

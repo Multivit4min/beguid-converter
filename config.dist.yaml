@@ -34,14 +34,11 @@ mysql:
 converter:
   #how many inserts should be done at once when generating ids
   insertBatchSize: 30000
-  #this defines how much chars of the guid will get saved
-  #should be a multiple of 2
-  #defines how much characters of the guid should be saved in the database
-  #it is recommended to use either 6 or 8
-  #TODO: BELOW DATA MIGHT BE INCORRECT
-  #byteLength of 6: needs 17.6GB Disk Space per billion ids -> uses more CPU per request (but barely noticeable)
-  #byteLength of 8: needs 19.6GB Disk Space per billion ids -> requires less CPU per request
-  byteLength: 6
+  #this defines how much bytes of the guid will be saved
+  #it is recommended to use either 3 or 4
+  #byteLength of 3: needs 17.6GB Disk Space per billion ids -> uses more CPU per request (but barely noticeable)
+  #byteLength of 4: needs 19.6GB Disk Space per billion ids -> requires less CPU per request
+  byteLength: 3
   #initial steamid should not be changed
   #leave it as a string
   offset: "76561197960265730"
