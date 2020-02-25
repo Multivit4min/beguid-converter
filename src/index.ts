@@ -1,4 +1,4 @@
-import { initialize as initConfig } from "./setup/config"
+import { initialize as initConfig, config } from "./setup/config"
 import { initialize as initFileSystem } from "./setup/filesystem"
 import { initialize as initCache } from "./setup/cache"
 import { initialize as initMysql } from "./setup/mysql"

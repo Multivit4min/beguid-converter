@@ -3,3 +3,4 @@ data
 config.yaml
 src_old
 lib
+.vscode

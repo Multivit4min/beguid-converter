@@ -33,8 +33,7 @@ mysql:
   table: "beguid_"
 converter:
   #how many inserts should be done at once when generating ids
-  #leave it as a string
-  insertBatchSize: "50000"
+  insertBatchSize: 30000
   #this defines how much chars of the guid will get saved
   #should be a multiple of 2
   #defines how much characters of the guid should be saved in the database

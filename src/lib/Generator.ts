@@ -28,7 +28,7 @@ export class Generator {
   /** retrieves the current maximum used id */
   private async fetchCurrentMaxId() {
     const status = await this.getOverallTableStatus()
-    return status.reduce((acc, curr) => acc + BigInt(curr.Rows), 0n)
+    return status.reduce((acc, curr) => acc + BigInt(curr.Rows), 0n) + BigInt(this.config.converter.offset) - 1n
   }
 
   /** retrieves the mysql table status of all tables */
@@ -64,13 +64,23 @@ export class Generator {
     return this
   }
 
+  /* starts the worker thread to generate new ids */
   private startWorker() {
-    this.worker = new Worker(path.join(__dirname, "../worker.js"))
+    this.worker = new Worker(path.join(__dirname, "../worker.js"), { workerData: this.getWorkerData() })
     this.worker.once("exit", () => {
       this.busy = false
       this.worker = null
       console.log("worker exited")
     })
+  }
+
+  /* retrieves data for the worker */
+  private getWorkerData() {
+    return {
+      config: this.config,
+      lastInserted: this.lastInserted,
+      generateUntil: this.generateUntil
+    }
   }
 
 }
@@ -80,5 +90,9 @@ export namespace Generator {
     pool: Pool
     beguid: BEGuid
     config: Configuration
+  }
+  export interface WorkerData {
+    lastInserted: bigint
+    generateUntil: bigint
   }
 }

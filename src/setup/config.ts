@@ -35,7 +35,7 @@ export interface Configuration {
     table: string
   }
   converter: {
-    insertBatchSize: string
+    insertBatchSize: number
     byteLength: number
     offset: string
   }

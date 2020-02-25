@@ -1,4 +1,4 @@
-import mysql from "promise-mysql"
+import mysql, { ConnectionOptions } from "promise-mysql"
 import { config } from "./config"
 
 export type ValidSuffix = "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"|"a"|"b"|"c"|"d"|"e"|"f"
@@ -10,9 +10,14 @@ export async function initialize() {
   if (!/^[a-z0-9\-_]+$/i.test(config.mysql.table))
     throw new Error("MYSQL table name should only contain chars from 'a-z', '0-9', '_' and '-'!")
   binaryLen = Math.ceil(config.converter.byteLength / 2)
-  pool = mysql.createPool(config.mysql.connection)
+  pool = createPool(config.mysql.connection)
   await createTables()
   await validateTables()
+}
+
+/** creates a connection pool */
+export function createPool(connection: ConnectionOptions) {
+  return mysql.createPool(connection)
 }
 
 //creates all tables with their hex suffix
