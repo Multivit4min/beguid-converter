@@ -47,14 +47,27 @@ export class Cache {
   }
 
   /**
+   * removes all items from cache which are null
+   */
+  async clearNullItems() {    
+    Object.values(this.items)
+      .filter(item => item.isNull())
+      .forEach(item => delete this.items[item.getGuid()])
+    await this.saveToCache()
+    return this
+  }
+
+  /**
    * tries to get an item from the current cache
    * @param guid the guid to search for
    */
   findGuid(guid: string) {
     const item = this.items[guid]
     if (!item) return false
-    item.refresh(this.config.data.cache.keepTime)
-    return item.incrementCounter().getSteamId()
+    return item
+    .refresh(this.config.data.cache.keepTime)
+    .incrementCounter()
+    .getSteamId()
   }
 
   /**
@@ -62,7 +75,7 @@ export class Cache {
    * @param guid 
    * @param steamid 
    */
-  addItem(guid: string, steamid: string|bigint) {
+  addItem(guid: string, steamid: string|bigint|null) {
     steamid = typeof steamid === "bigint" ? steamid.toString() : steamid
     const item = CacheItem.from([guid, steamid, Date.now() + this.config.data.cache.keepTime])
     this.items[item.getGuid()] = item
@@ -102,7 +115,7 @@ export class Cache {
 export class CacheItem {
 
   guid: string
-  steamid: bigint
+  steamid: string|null
   collectTime: number
   counter: number
 
@@ -116,18 +129,23 @@ export class CacheItem {
   static from([guid, steamid, collectTime, counter]: CacheItem.Serialized) {
     return new CacheItem({
       guid,
-      steamid: BigInt(steamid),
+      steamid,
       collectTime,
       counter: counter || 0
     })
   }
 
   serialize() {
-    return [this.guid, this.steamid.toString(10), this.collectTime, this.counter]
+    return [this.guid, this.steamid, this.collectTime, this.counter]
   }
 
   refresh(duration: number) {
     this.collectTime = Date.now() + duration
+    return this
+  }
+
+  isNull() {
+    return this.steamid === null
   }
 
   isValid() {
@@ -139,7 +157,7 @@ export class CacheItem {
   }
 
   getSteamId() {
-    return this.steamid
+    return BigInt(this.steamid)
   }
 
   getCounter() {
@@ -153,9 +171,9 @@ export class CacheItem {
 }
 
 export namespace CacheItem {
-  export type Serialized = [string, string, number, number?]
+  export type Serialized = [string, string|null, number, number?]
   export interface Init {
-    steamid: bigint
+    steamid: string|null
     guid: string
     counter: number
     collectTime: number

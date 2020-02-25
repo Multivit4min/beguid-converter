@@ -24,6 +24,8 @@ export class BEGuid {
     uid = uid.toLowerCase()
     if (!BEGuid.isValidBattleyeUid(uid))
       throw new Error(`invalid battleye uid provided, got "${uid}"`)
+    const res = this.cache.findGuid(uid)
+    if (res !== false) return res
     const { suffix, search } = this.getBattleyeUidInfo(uid)
     const entries = await this.getReverseEntries(suffix, [search])
     return this.getIdFromEntries(uid, entries)
@@ -36,8 +38,19 @@ export class BEGuid {
   async convertBattleyeUIDs(uids: string[]) {
     const result: Record<string, bigint|null> = {}
     uids = uids
+      //convert all items to lowercase
       .map(uid => uid.toLowerCase())
+      //remove all invalid elements
       .filter(uid => BEGuid.isValidBattleyeUid(uid) ? true : (result[uid] = null, false))
+      //get ids from cache
+      .filter(uid => {
+        const res = this.cache.findGuid(uid)
+        if (res === false) return true
+        result[uid] = res
+        return false
+      })
+    //have all items been found already?
+    if (uids.length === 0) return result
     const infos = this.getBattleyeUidInfos(uids)
     await Promise.all(Object.keys(infos).map(async suffix => {
       const entries = await this.getReverseEntries(
@@ -56,14 +69,19 @@ export class BEGuid {
    * @param uid the uid to look for
    * @param entries the database entries to check agains
    */
-  private getIdFromEntries(uid: string, entries: BEGuid.DBSearchResponse) {
+  private getIdFromEntries(uid: string, entries: BEGuid.DBSearchResponse, cache: boolean = true) {
     let id: bigint = 0n
     const found = entries.some(({ steamid }) => {
       id = this.config.internals.steamIdOffset + BigInt(steamid)
       return uid === BEGuid.toBattleyeUID(id)
     })
-    if (found) return id
-    return null
+    if (found) {
+      this.cache.addItem(uid, id)
+      return id
+    } else {
+      this.cache.addItem(uid, null)
+      return null
+    }
   }
 
   /**
@@ -73,8 +91,17 @@ export class BEGuid {
    */
   private getReverseEntries(suffix: ValidSuffix, search: string[]): Promise<BEGuid.DBSearchResponse> {
     return this.pool.query(
-      `SELECT steamid FROM ${getTableName(suffix)} WHERE guid = UNHEX(?)`, search
+      this.getSelectStmt(suffix, search.length), search
     )
+  }
+
+  /** retrieves the select statement for the table suffix and length of the entries to lookup */
+  private getSelectStmt(suffix: ValidSuffix, len: number = 1) {
+    return (`\
+      SELECT steamid\
+      FROM ${getTableName(suffix)}\
+      WHERE guid IN (${Array(len).fill("UNHEX(?)").join(",")})\
+    `)
   }
 
   /**
@@ -86,7 +113,7 @@ export class BEGuid {
     uids.forEach(uid => {
       const search = this.getBattleyeUidInfo(uid)
       const { suffix } = search
-      if (Array.isArray(result[suffix])) result[suffix] = []
+      if (!Array.isArray(result[suffix])) result[suffix] = []
       result[suffix].push(search)
     })
     return result
