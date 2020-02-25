@@ -28,7 +28,7 @@ mysql:
     #mysql database password
     password: ""
     #mysql maximum connection for the pool
-    connectionLimit: 5
+    connectionLimit: 16
   #database table prefix to use
   table: "beguid_"
 converter:

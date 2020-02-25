@@ -22,6 +22,7 @@ export class GeneratorWorker {
     this.batch = this.initializeEmptyBatch()
   }
 
+  /** creates an empty batch object */
   private initializeEmptyBatch(): Record<ValidSuffix, Batch> {
     //@ts-ignore
     return Object.fromEntries(Array(16).fill(null).map((_, i) => [
@@ -34,39 +35,50 @@ export class GeneratorWorker {
       })
     ]))
   }
+
+  /** runs the generator */
   async run() {
     while (true) {
       const suffix = this.generateBatch()
       if (typeof suffix === "boolean") {
-        await Promise.all(Object.values(this.batch).map(b => b.dispatch()))
-        return console.log("done all")
+        return Promise.all(Object.values(this.batch).map(b => b.dispatch()))
       } else {
-        console.log({ suffix })
         await this.batch[suffix].dispatch()
       }
     }
   }
 
+  /** 
+   * generates ids until either the limit for a single batch has been reached or
+   * the maximum calculation amount has been reached
+   */
   private generateBatch(): ValidSuffix|boolean {
     while (true) {
       const next = this.getNextId()
       const s = <ValidSuffix>next[1][0]
       this.batch[s].push(next)
-      //console.log({ suffix: s, count: this.batch[s].getCount() })
       if (this.hasCalculationAmountReached()) return true
       if (this.batch[s].isFull()) return s
     }
   }
 
+  /** checks if the amount of generated ids has been reached */
   private hasCalculationAmountReached() {
     return this.lastInserted + this.countInCollector() >= this.generateUntil
   }
 
+  /** 
+   * gets the amount of steamids which are still in the batches
+   * pending for being inserted into the database
+   */
   private countInCollector() {
     return Object.values(this.batch).reduce((curr, acc) => curr + BigInt(acc.getCount()), 0n)
   }
 
-
+  /**
+   * retrieves the next steamid + battleye uid
+   * and increments the lastInserted id
+   */
   private getNextId(): Batch.Item {
     return [++this.lastInserted-this.offset, BEGuid.toBattleyeUID(this.lastInserted)]
   }
@@ -108,7 +120,6 @@ class Batch {
   async dispatch() {
     await this.busy
     this.busy = this.pool.query(this.createInsertAndClean())
-    return this.busy
   }
 
   /** checks if the batch is full */

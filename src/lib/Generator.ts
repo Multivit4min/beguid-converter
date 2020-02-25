@@ -10,6 +10,7 @@ export class Generator {
   private worker: Worker|null = null
   private config: Configuration
   private busy: boolean = false
+  private workerPromise: Promise<void> = Promise.resolve()
   private lastInserted: bigint = -1n
   private generateUntil: bigint = -1n
 
@@ -50,27 +51,21 @@ export class Generator {
     return this
   }
 
-  /** sends a stop request to the generator */
-  stop() {
-    this.busy = false
-    return this
-  }
-
   /** starts the generator */
   start() {
     if (this.lastInserted >= this.generateUntil) return this
-    this.busy = true
-    this.startWorker()
-    return this
+    this.workerPromise = this.startWorker()
+    return this.workerPromise
   }
 
   /* starts the worker thread to generate new ids */
   private startWorker() {
-    this.worker = new Worker(path.join(__dirname, "../worker.js"), { workerData: this.getWorkerData() })
-    this.worker.once("exit", () => {
-      this.busy = false
-      this.worker = null
-      console.log("worker exited")
+    return new Promise<void>(fulfill => {
+      this.worker = new Worker(path.join(__dirname, "../worker.js"), { workerData: this.getWorkerData() })
+      this.worker.once("exit", () => {
+        this.worker = null
+        fulfill()
+      })
     })
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "guidconverter",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Converts BE GUID to a Steam ID",
   "main": "app.js",
   "scripts": {
