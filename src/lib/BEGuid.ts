@@ -25,8 +25,30 @@ export class BEGuid {
     if (!BEGuid.isValidBattleyeUid(uid))
       throw new Error(`invalid battleye uid provided, got "${uid}"`)
     const { suffix, search } = this.getBattleyeUidInfo(uid)
-    const entries = await this.getReverseEntries(suffix, search)
+    const entries = await this.getReverseEntries(suffix, [search])
     return this.getIdFromEntries(uid, entries)
+  }
+
+  /**
+   * tries to retrieve multiple uids from the database
+   * @param uid the battleyeuids to search for
+   */
+  async convertBattleyeUIDs(uids: string[]) {
+    const result: Record<string, bigint|null> = {}
+    uids = uids
+      .map(uid => uid.toLowerCase())
+      .filter(uid => BEGuid.isValidBattleyeUid(uid) ? true : (result[uid] = null, false))
+    const infos = this.getBattleyeUidInfos(uids)
+    await Promise.all(Object.keys(infos).map(async suffix => {
+      const entries = await this.getReverseEntries(
+        <ValidSuffix>suffix,
+        Object.values(infos[suffix]).map(s => s.search)
+      )
+      infos[suffix].forEach(info => {
+        result[info.uid] = this.getIdFromEntries(info.uid, entries)
+      })
+    }))
+    return result
   }
 
   /**
@@ -49,10 +71,25 @@ export class BEGuid {
    * @param suffix the table suffix to lookup
    * @param search the search string to look for
    */
-  private getReverseEntries(suffix: ValidSuffix, search: string): Promise<BEGuid.DBSearchResponse> {
+  private getReverseEntries(suffix: ValidSuffix, search: string[]): Promise<BEGuid.DBSearchResponse> {
     return this.pool.query(
       `SELECT steamid FROM ${getTableName(suffix)} WHERE guid = UNHEX(?)`, search
     )
+  }
+
+  /**
+   * retrieves database search parameters from multiple uid strings
+   * @param uids the uids to get the search parameters from
+   */
+  private getBattleyeUidInfos(uids: string[]) {
+    const result: Record<string, BEGuid.BattleyeUidInfo[]> = {}
+    uids.forEach(uid => {
+      const search = this.getBattleyeUidInfo(uid)
+      const { suffix } = search
+      if (Array.isArray(result[suffix])) result[suffix] = []
+      result[suffix].push(search)
+    })
+    return result
   }
 
   /**
@@ -61,6 +98,7 @@ export class BEGuid {
    */
   private getBattleyeUidInfo(uid: string): BEGuid.BattleyeUidInfo {
     return {
+      uid,
       suffix: <ValidSuffix>uid[0],
       search: uid.substr(1, this.config.internals.hexChars)
     }
@@ -97,5 +135,6 @@ export namespace BEGuid {
   export interface BattleyeUidInfo {
     suffix: ValidSuffix
     search: string
+    uid: string
   }
 }
