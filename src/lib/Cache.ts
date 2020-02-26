@@ -131,7 +131,7 @@ export class CacheItem {
       guid,
       steamid,
       collectTime,
-      counter: counter || 0
+      counter: counter || 1
     })
   }
 

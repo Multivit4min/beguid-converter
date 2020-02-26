@@ -6,6 +6,12 @@ webserver:
     Access-Control-Allow-Origin: "*"
   #maximum keys to request at once
   postKeyLimit: 250
+  #disable admin page access completely
+  disableAdmin: false
+  #admin page access password
+  #you cann access the admin page via the url /admin
+  #the username is admin and the password ist the config setting below
+  password: "CHANGE ME!!!"
 data:
   #folder to save data to
   dir: ./data

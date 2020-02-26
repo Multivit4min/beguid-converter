@@ -1,10 +1,13 @@
+#endpoint url
 @url = http://localhost:6051
+# base64 encoded admin:password
+@basicAuth = YWRtaW46Zm9vYmFy
 
 ### convert guid to steamid
-GET {{url}}/b43236cc22116b04ec7d680ce89d498a
+GET {{url}}/939f64acae081b9deeed3fef7be87b57
 
 ### convert steamid to guid
-GET {{url}}/76561197960265763
+GET {{url}}/76561197970265730
 
 ### multi request steamid and guid
 POST {{url}}
@@ -12,18 +15,21 @@ Content-Type: application/json
 
 [
   "0cc99e3ab77a8a2037d278816f3c9ca7",
-  "ca5c318be11f0ee4390bb39ca77ab0f9",
-  "2fa56708d8aada2196fb7fd179bce65a",
-  "50b85daac187b3c8fcd709e707446285",
-  "b43236cc22116b04ec7d680ce89d498a",
-  "6656cdfc57c83726aa2281c9419d9d65",
-  "93e4281af33ca9c9493954f84df3bfae",
-  "61a4fc13d1e2dc33e37a53c264d30c93",
-  "89bee37d0e34cf1b12f6adb0295b4bda",
-  "0f4b988fe240c03ca1d468aedb4a0dfe",
-  "622616bcd2a4bc703be125c977bc3961",
-  "83b6e9c013a6a88d3bce3c6ec9ee6e96",
-  "d9f0608223446e28e927542e17c81d6e",
   "f79984b78ebed3536ed45be4ec03018b",
   "76561197960265763"
 ]
+
+### admin page
+GET {{url}}/admin
+Authorization: Basic {{basicAuth}}
+
+### admin stats page
+GET {{url}}/admin/status
+Authorization: Basic {{basicAuth}}
+
+### generate more ids
+POST {{url}}/admin/generate
+Content-Type: application/json
+Authorization: Basic {{basicAuth}}
+
+{ "till": "100000" }

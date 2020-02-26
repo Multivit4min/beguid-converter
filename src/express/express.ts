@@ -2,15 +2,21 @@ import express from "express"
 import { config } from "../setup/config"
 import { beguid } from "../setup/beguid"
 import { json, urlencoded } from "body-parser"
+import basicAuth from "express-basic-auth"
 
 export async function initialize() {
   const app = express()
-  app.listen(config.webserver.port, () => {
-    console.log(`express is listening on port ${config.webserver.port}`)
-  })
 
   app.use(json())
   app.use(urlencoded({ extended: true }))
+
+  if (!config.webserver.disableAdmin) {
+    app.use(
+      "/admin",
+      basicAuth({ users: { admin: config.webserver.password } }),
+      require("./admin")
+    )
+  }
   
   app.use((req, res, next) => {
     const { headers } = config.webserver
@@ -32,7 +38,7 @@ export async function initialize() {
   })
 
   //single steamid request
-  app.get("/:steamid(0-9){17}", async (req, res) => {
+  app.get("/:steamid([0-9]{17})", async (req, res) => {
     res.json({ data: beguid.convertSteamId(req.params.steamid) })
   })
 
@@ -46,10 +52,14 @@ export async function initialize() {
     if (body.some(res => (typeof res !== "string" || !(/^([a-f0-9]{32}|\d{17})$/).test(res))))
       return res.status(400).json({ error: "a value in the body did not match the following pattern: ^([a-f0-9]{32}|\\d{17})$" })
     res.json({ data: {
-      ...( await beguid.convertBattleyeUIDs(body.filter(key => key.length === 32))),
-      ...beguid.convertSteamIds(body.filter(key => key.length === 17))
+      ...(await beguid.convertBattleyeUIDs(body.filter(id => id.length === 32))),
+      ...beguid.convertSteamIds(body.filter(id => id.length === 17))
     }})
   })
 
   app.use((req, res) => res.status(400).json({ error: "No matching route found!" }))
+
+  app.listen(config.webserver.port, () => {
+    console.log(`express is listening on port ${config.webserver.port}`)
+  })
 }

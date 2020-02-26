@@ -4,13 +4,13 @@ SteamID <-> Battleye GUID Converter
 __Requirements:__
 * NodeJS 10 or higher
 * MySQL Database
-* a lot of free Disk Space (minimum 20GB)
+* a lot of free Disk Space (minimum 40GB)
 
 __Disk Space Requirements:__
 
 Depending on the setting of `guid.length` in your config the disk requirements are:
-* length of 6: needs 17.6GB Disk Space per billion ids -> uses more CPU per request (but barely noticeable)
-* length of 8: needs 19.6GB Disk Space per billion ids -> requires less CPU per request, but more disk space
+* length of 3: needs 17.6GB Disk Space per billion ids -> uses more CPU per request (but barely noticeable)
+* length of 4: needs 19.6GB Disk Space per billion ids -> requires less CPU per request, but more disk space
 
 __Limitations:__
 
@@ -19,20 +19,13 @@ The maximum limit of steamids which can be generated is `4,294,967,295` this is 
 __Install:__
 
 * Enter your Installation Folder and run `npm install`
-* Edit the file `config.js` (documentation in this file included)
-  * edit the listenport
-  * edit the mysql configuration
-* run the `app.js` with node preferable with pm2 or another process manager
-
-__console.js usage:__
-
-If you want to start inserting SteamIDs to the Database execute `console.js` with node.
-A prompt should open which asks you what to do, select the first entry and select the amount of ids you want to insert.
-The amount will be sent to the app.js process which will handle the generation of the steamids, after that you can close the console.js program again, you can always restart the console.js program to track the generator progress
+* Copy the file `config.dist.yaml` to `config.yaml`
+* Edit the file `config.yaml` (documentation about the settings is in this file included)
+* start the programm via `lib/index.js` with node preferable with pm2 or another process manager
 
 __How much GUIDs should be generated?__
 
-In order to cover all SteamIDs you should generate around 1 Billion ids
+In order to cover all SteamIDs you should generate around 2 Billion ids
 
 __HTTP API usage:__
 

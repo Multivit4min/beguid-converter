@@ -8,6 +8,7 @@ export class Generator {
   private pool: Pool
   private cache: Cache
   private worker: Worker|null = null
+  private workerStatus: Generator.WorkerStatus|null = null
   private config: Configuration
   private busy: boolean = false
   private workerPromise: Promise<void> = Promise.resolve()
@@ -38,6 +39,16 @@ export class Generator {
     return this.pool.query(`SHOW table status WHERE Name LIKE '${tableName}_'`)
   }
 
+  /** retrieves status information from the worker */
+  getWorkerStatus() {
+    return this.workerStatus
+  }
+
+  /** retrieves the latest  */
+  lastInsertedId() {
+    return this.lastInserted
+  }
+
   /** check if the genertor is currently working */
   isBusy() {
     return this.busy
@@ -54,13 +65,14 @@ export class Generator {
   /** sets a new amount of data to generate */
   generateUntil(till: bigint) {
     if (this.isBusy()) throw new Error("there is already a job running, can not add more till the current job has finnished")
-    if (till < this.lastInserted) return this
-    this.generate = till
+    if (till + this.config.internals.steamIdOffset < this.lastInserted) return this
+    this.generate = till + this.config.internals.steamIdOffset
     return this
   }
 
   /** starts the generator */
   start() {
+    if (this.busy) return this
     if (this.lastInserted >= this.generate) return this
     this.workerPromise = this.startWorker()
     return this.workerPromise
@@ -68,14 +80,23 @@ export class Generator {
 
   /* starts the worker thread to generate new ids */
   private startWorker() {
-    return new Promise<void>(fulfill => {
+    return new Promise<void>((fulfill, reject) => {
       this.worker = new Worker(path.join(__dirname, "../worker.js"), { workerData: this.getWorkerData() })
-      this.worker.once("exit", async () => {
+      this.worker.on("message", (status: Generator.WorkerStatus) => {
+        this.workerStatus = status
+      })
+      this.worker.once("exit", async code => {
         this.worker = null
-        //clear all items in cache which are null
-        //its possible that one or more of those have been generated
-        await this.cache.clearNullItems()
-        fulfill()
+        this.busy = false
+        if (code === 0) {
+          this.lastInserted = this.generate
+          //clear all items in cache which are null
+          //its possible that one or more of those have been generated
+          await this.cache.clearNullItems()
+          fulfill()
+        } else {
+          reject(Error("failed to generate ids, its recommended to rebuild the database from scratch!"))
+        }
       })
     })
   }
@@ -100,5 +121,13 @@ export namespace Generator {
   export interface WorkerData {
     lastInserted: bigint
     generate: bigint
+  }
+  export interface WorkerStatus {
+    startedAt: number
+    time: number
+    started: string
+    lastInserted: string
+    generateUntil: string
+    left: string
   }
 }

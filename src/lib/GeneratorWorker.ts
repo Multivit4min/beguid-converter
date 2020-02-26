@@ -2,21 +2,26 @@ import { Pool } from "promise-mysql"
 import { BEGuid } from "./BEGuid"
 import { ValidSuffix, getTableName } from "../setup/mysql"
 import { Configuration } from "../setup/config"
+import { parentPort } from "worker_threads"
+import { Generator } from "./Generator"
 
 export class GeneratorWorker {
   private config: Configuration
   private pool: Pool
   private offset: bigint
+  private started: bigint
   private lastInserted: bigint
   private generateUntil: bigint
   private batchSize: number
   private batch: Record<ValidSuffix, Batch>
+  private startedAt: number = -1
 
   constructor(init: GeneratorWorker.Init) {
     this.config = init.config
     this.pool = init.pool
     this.offset = BigInt(this.config.converter.offset)
     this.batchSize = Number(this.config.converter.insertBatchSize)
+    this.started = init.lastInserted
     this.lastInserted = init.lastInserted
     this.generateUntil = init.generateUntil
     this.batch = this.initializeEmptyBatch()
@@ -38,15 +43,37 @@ export class GeneratorWorker {
 
   /** runs the generator */
   async run() {
+    this.startedAt = Date.now()
     while (true) {
       const suffix = this.generateBatch()
-      console.log({ suffix })
       if (typeof suffix === "boolean") {
-        return Promise.all(Object.values(this.batch).map(b => b.dispatch()))
+        await this.dispatchAllBatches()
+        this.postStatus()
+        return
       } else {
+        this.postStatus()
         await this.batch[suffix].dispatch()
       }
     }
+  }
+
+  /** sends all batches to storage */
+  private dispatchAllBatches() {
+    return Promise.all(Object.values(this.batch).map(b => b.dispatch(true)))
+  }
+  
+  /** sends a message to parent */
+  postStatus() {
+    if (!parentPort) return
+    const status: Generator.WorkerStatus = {
+      startedAt: this.startedAt,
+      time: Date.now(),
+      started: this.started.toString(),
+      lastInserted: this.lastInserted.toString(),
+      generateUntil: this.generateUntil.toString(),
+      left: String(this.generateUntil - this.lastInserted)
+    }
+    parentPort.postMessage(status)
   }
 
   /** 
@@ -65,15 +92,7 @@ export class GeneratorWorker {
 
   /** checks if the amount of generated ids has been reached */
   private hasCalculationAmountReached() {
-    return this.lastInserted + this.countInCollector() >= this.generateUntil
-  }
-
-  /** 
-   * gets the amount of steamids which are still in the batches
-   * pending for being inserted into the database
-   */
-  private countInCollector() {
-    return Object.values(this.batch).reduce((curr, acc) => curr + BigInt(acc.getCount()), 0n)
+    return this.lastInserted >= this.generateUntil
   }
 
   /**
@@ -118,9 +137,10 @@ class Batch {
   }
 
   /** sends the batch to database */
-  async dispatch() {
+  async dispatch(wait: boolean = false) {
     await this.busy
     this.busy = this.pool.query(this.createInsertAndClean())
+    if (wait) return this.busy
   }
 
   /** checks if the batch is full */

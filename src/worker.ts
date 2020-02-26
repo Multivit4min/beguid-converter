@@ -16,6 +16,7 @@ const { lastInserted, generate }: Generator.WorkerData = workerData
       lastInserted,
       generateUntil: generate
     })
+    console.log("starting generator task...")
     await generatorWorker.run()
     console.log("generator task finnished successful")
     process.exit(0)
