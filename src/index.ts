@@ -4,6 +4,7 @@ import { initialize as initCache } from "./setup/cache"
 import { initialize as initMysql } from "./setup/mysql"
 import { initialize as initBEGuid } from "./setup/beguid"
 import { initialize as initGenerator } from "./setup/generator"
+import { initialize as initExpress } from "./express/express"
 
 ;(async() => {
   try {
@@ -17,4 +18,5 @@ import { initialize as initGenerator } from "./setup/generator"
   await initCache()
   await initBEGuid()
   await initGenerator()
+  await initExpress()
 })()

@@ -157,7 +157,7 @@ export class CacheItem {
   }
 
   getSteamId() {
-    return BigInt(this.steamid)
+    return this.steamid
   }
 
   getCounter() {

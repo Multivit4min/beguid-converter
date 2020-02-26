@@ -36,7 +36,7 @@ export class BEGuid {
    * @param uid the battleyeuids to search for
    */
   async convertBattleyeUIDs(uids: string[]) {
-    const result: Record<string, bigint|null> = {}
+    const result: Record<string, string|null> = {}
     uids = uids
       //convert all items to lowercase
       .map(uid => uid.toLowerCase())
@@ -64,6 +64,16 @@ export class BEGuid {
     return result
   }
 
+  /** converts a steamid to a battleye uid */
+  convertSteamId(steamid: string) {
+    return BEGuid.toBattleyeUID(BigInt(steamid))
+  }
+
+  /** converts multiple steamids to battleye uids */
+  convertSteamIds(steamids: string[]): Record<string, string> {
+    return Object.fromEntries(steamids.map(id => [id, this.convertSteamId(id)]))
+  }
+
   /**
    * tries to find the element in a list of entries matching the given uid
    * @param uid the uid to look for
@@ -77,7 +87,7 @@ export class BEGuid {
     })
     if (found) {
       this.cache.addItem(uid, id)
-      return id
+      return String(id)
     } else {
       this.cache.addItem(uid, null)
       return null
