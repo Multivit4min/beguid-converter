@@ -21,8 +21,8 @@ export async function initialize() {
   const data = await fs.readFile(path.join(__dirname, "../..", "config.yaml"), "utf-8")
   const yamlConfig = yaml.safeLoad(data)
   config = { ...yamlConfig, internals: internals(yamlConfig) }
-  if (config.webserver.password === "CHANGE ME!!!")
-    throw new Error("Configuration Error! Please change the password in your config.yml > webserver > password !")
+  if (config.webserver.credentials.admin === "CHANGE ME!!!")
+    throw new Error("Configuration Error! Please change the admin password in your config.yml > webserver > credentials > admin !")
 }
 
 export interface Configuration {
@@ -32,7 +32,8 @@ export interface Configuration {
     headers: Record<string, string>
     postKeyLimit: number
     disableAdmin: boolean
-    password: string
+    forceBasicAuthEverywhere: boolean
+    credentials: Record<string, string>
   }
   data: {
     dir: string

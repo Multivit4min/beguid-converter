@@ -15,13 +15,20 @@ admin.post("/generate", (req, res) => {
   const till = (body && body.till) ? body.till : undefined
   if (till === undefined || isNaN(till)) return res.status(400).json({ error: "invalid body provided" })
   if (generator.isBusy()) return res.status(400).json({ error: "generator is busy" })
-  generator.generateUntil(BigInt(till))
-  generator.start()
+  try {
+    generator.generateUntil(BigInt(till))
+    generator.start()
+  } catch (e) {
+    return res.sendStatus(400)
+  }
   res.sendStatus(200)
 })
 
 admin.get("/status", (req, res) => {
   res.json({
+    config: {
+      offset: config.converter.offset
+    },
     generator: {
       busy: generator.isBusy(),
       status: generator.getWorkerStatus(),

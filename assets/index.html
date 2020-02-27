@@ -1,11 +1,92 @@
+<!doctype html>
 <html>
   <head>
+    <meta charset="utf-8" />
     <title>Converter Admin</title>
   </head>
   <body>
-    <h2>Converter Admin</h2>
+    <h2>Minimal Admin:</h2>
+    <div>Current generated Ids: <span id="generatedIds">0</span></div>
+    <div>Generator Busy? <span id="generatorBusy">unknown</span></div>
+    <div id="generatorOptions" style="display: none;">
+      <input type="number" id="amount" />
+      <select name="modifier" id="modifier">
+        <option value="1000000">Million</option>
+        <option selected value="1000000000">Billion</option>
+      </select>
+      <button onClick="startGenerator()">Start Generator</button>
+    </div>
+    <div id="generatorStatus" style="display: none;">
+      <div>Progress: <span id="percentageDone">0</span>%</div>
+      <div>Runtime: <span id="runtime">0</span>s</div>
+      <div>Still to generate: <span id="stillToGenerate"></span></div>
+    </div>
+    <div>
+      <h3>Test Converter:</h3>
+      <input type="string" id="lookupId" value="76561197960265730"><button onClick="lookup()">Lookup</button>
+      <div id="lookupResponse"></div>
+    </div>
     <script>
-    
+      let status = {}
+
+      function startGenerator() {
+        const amount = parseInt(document.getElementById("amount").value, 10)
+        const modifier = parseInt(document.getElementById("modifier").value, 10)
+        if (isNaN(amount) || isNaN(modifier)) throw new Error("invalid input")
+        postGenerate((amount * modifier).toString())
+      }
+
+      function postGenerate(till) {
+        return fetch("/admin/generate", {
+          method: "POST",
+          creadentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ till })
+        })
+      }
+
+      function getStatus() {
+        return fetch("/admin/status")
+          .then(res => res.json())
+      }
+
+      function lookup() {
+        const id = document.getElementById("lookupId").value
+        return fetch(`/${id}`).then(async res => {
+          const pre = document.createElement("pre")
+          let text = `Results for: ${id}\n`
+          text += `${res.status} ${res.statusText}: ${await res.text()}\n`
+          pre.innerHTML = text
+          document.getElementById("lookupResponse").appendChild(pre)
+        })
+      }
+
+      function updateStatus() {
+        getStatus().then(s => {
+          status = s
+          document.getElementById("generatorBusy").innerHTML = s.generator.busy
+          const genOpts = document.getElementById("generatorOptions")
+          const genStat = document.getElementById("generatorStatus")
+          if (s.generator.busy) {
+            genOpts.style.display = "none"
+            genStat.style.display = "block"
+            document.getElementById("generatedIds").innerHTML = `~${parseInt(s.generator.status.lastInserted, 10) - parseInt(s.config.offset, 10)}`
+            const offset = parseInt(s.generator.status.started, 10)
+            document.getElementById("percentageDone").innerHTML = (
+              100 / (parseInt(s.generator.status.generateUntil, 10) - offset) * (parseInt(s.generator.status.lastInserted, 10) - offset)
+            ).toFixed(3)
+            document.getElementById("runtime").innerHTML = Math.floor(s.generator.status.time / 1000) - Math.floor(s.generator.status.startedAt / 1000)
+            document.getElementById("stillToGenerate").innerHTML = s.generator.status.left
+          } else {            
+            document.getElementById("generatedIds").innerHTML = s.generator.totalIds
+            genOpts.style.display = "block"
+            genStat.style.display = "none"
+          }
+        })
+      }
+
+      setInterval(() => updateStatus(), 1000)
+      updateStatus()
     </script>
   </body>
 </html>

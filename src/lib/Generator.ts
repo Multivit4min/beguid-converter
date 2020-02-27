@@ -56,7 +56,7 @@ export class Generator {
 
   /** adds a new amount of data to generate */
   generateAmount(amount: bigint) {
-    if (this.isBusy()) throw new Error("there is already a job running, can not add more till the current job has finnished")
+    this.throwOnBusy()
     if (amount < 0n) return this
     this.generate += amount
     return this
@@ -64,16 +64,22 @@ export class Generator {
 
   /** sets a new amount of data to generate */
   generateUntil(till: bigint) {
-    if (this.isBusy()) throw new Error("there is already a job running, can not add more till the current job has finnished")
+    this.throwOnBusy()
     if (till + this.config.internals.steamIdOffset < this.lastInserted) return this
     this.generate = till + this.config.internals.steamIdOffset
     return this
   }
 
+  /** raises an error if worker is busy */
+  private throwOnBusy() {
+    if (this.isBusy()) throw new Error("generator is already running...")
+  }
+
   /** starts the generator */
   start() {
-    if (this.busy) return this
+    this.throwOnBusy()
     if (this.lastInserted >= this.generate) return this
+    this.busy = true
     this.workerPromise = this.startWorker()
     return this.workerPromise
   }

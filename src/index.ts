@@ -19,4 +19,5 @@ import { initialize as initExpress } from "./express/express"
   await initBEGuid()
   await initGenerator()
   await initExpress()
+  console.log("application initialized")
 })()

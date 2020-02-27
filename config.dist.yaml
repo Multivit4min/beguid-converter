@@ -2,16 +2,22 @@ webserver:
   #webserver listenport
   port: 6051
   #headers to add to the api
+  #headers will only be appended to the public endpoints
+  #and not to the admin interface
   headers:
     Access-Control-Allow-Origin: "*"
   #maximum keys to request at once
   postKeyLimit: 250
   #disable admin page access completely
+  #you cann access the admin page via the url "/admin"
   disableAdmin: false
-  #admin page access password
-  #you cann access the admin page via the url /admin
-  #the username is admin and the password ist the config setting below
-  password: "CHANGE ME!!!"
+  #use basic auth for all endpoints
+  forceBasicAuthEverywhere: false
+  #basic auth access credentials
+  #request headers will need:
+  #Authorization: Basic [BASE64ENCODE("username:password")]
+  credentials:
+    admin: "CHANGE ME!!!"
 data:
   #folder to save data to
   dir: ./data
@@ -39,7 +45,7 @@ mysql:
   table: "beguid_"
 converter:
   #how many inserts should be done at once when generating ids
-  insertBatchSize: 30000
+  insertBatchSize: 20000
   #this defines how much bytes of the guid will be saved
   #it is recommended to use either 3 or 4
   #byteLength of 3: needs 17.6GB Disk Space per billion ids -> uses more CPU per request (but barely noticeable)
