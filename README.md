@@ -63,3 +63,36 @@ This will expose the webserver in port 49160, you can adapt this to the port of 
 
 This is just a very basic Docker image installing dependencies and launching the web server. Networking/database setup is still required.
 You can open the console.js by opening the container's bash by using `docker exec -it 0a17ffd4db41 /bin/bash` (replace the container ID with yours) and then running `node console.js`.
+
+__How it works:__
+
+The initial SteamID which gets saved is: `"76561197970265730"`.
+SteamIDs will get handles as String since JavaScript is unable to handle plain numbers of that size. Internally it will be converted to a BigInt.
+
+The SteamID as Battleye ID will get converted to `939f64acae081b9deeed3fef7be87b57`, depending on the configuration only the first 36 or 28 bits are interesting.
+Which would be: 
+
+```
+OFFSET 0  4  8  12 16 20 24 28 32
+GUID   9  3  9  f  6  4  a  c  a
+```
+
+The first hexadezimal character is the tablename for example `beguid_<HEX>` and in this case `beguid_9`, this is the reason why there are 16 tables created.
+The rest of the 4 bytes will then stored in the table row.
+The layout of one table is following:\
+
+`steamid UINT`\
+this starts from 0 and will be internally be offset with the offset number which can be found inside the configuration in our example this would be `10000000` since the offset per default is `76561197960265730` + `10000000` = `76561197970265730`
+
+`guid BINARY(4)`\
+this is the `4-32` bits of the guid since the first `4` bits are beingt held as tablename in our example it would be `39f64aca`
+
+If you now want to retrieve a steamid by its guid (the one we used in the example) a SQL Query will be created which finally looks like
+
+```sql
+SELECT steamid
+FROM beguid_9
+WHERE guid IN (UNHEX("39f64aca"))
+```
+
+This should give around 40 rows back (depending on how much steamids have been generated) which then get calculated to their full steamid, those 40 steamids will now be taken and the api will convert each steamid to their guid till the correct requested guid has been found!
