@@ -16,5 +16,5 @@ export async function initialize() {
       throw e
     }
   }
-  await fs.writeFile(config.internals.pidFile, process.pid)
+  await fs.writeFile(config.internals.pidFile, process.pid.toString(10))
 }

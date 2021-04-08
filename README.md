@@ -2,7 +2,7 @@ SteamID <-> Battleye GUID Converter
 ===
 
 __Requirements:__
-* NodeJS 10 or higher
+* NodeJS 12 or higher
 * MySQL Database
 * a lot of free Disk Space (minimum 40GB)
 
